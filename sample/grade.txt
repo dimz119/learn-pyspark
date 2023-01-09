@@ -1,0 +1,5 @@
+tom 70
+sara 80
+joon 100
+kevin 90
+John 90
