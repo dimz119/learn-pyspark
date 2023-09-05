@@ -1,5 +1,5 @@
 
-# start PySpark notebook docker
+# Start PySpark notebook docker
 ```
 # use docker command
 docker run -it --rm -p 8888:8888 -v /Users/seungjoonlee/git/pyspark:/home/jovyan/work --user root -e NB_GID=100 -e GRANT_SUDO=yes -e GRANT_SUDO=yes jupyter/pyspark-notebook
@@ -29,14 +29,14 @@ docker logs 0042c7d1e77d
 # click the last link to open the notebook
 ```
 
-# generate fake data
+# Generate fake data
 https://github.com/lucapette/fakedata
 fakedata --limit 1000 --separator=, name email int:10000,200000 >> income.csv
 
-# start history server after ssh into the spark master container
+# Start history server after ssh into the spark master container
 ./sbin/start-history-server.sh
 
-# spark-submit usage
+# How to use spark-submit
 spark-submit --master spark://spark:7077 <python_file_location>
 
 # Start Spark with multiple worker
