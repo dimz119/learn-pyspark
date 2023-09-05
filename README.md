@@ -46,6 +46,15 @@ docker compose up --scale spark-worker=2
 spark-submit --master spark://spark:7077 --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1 spark_kafka.py
 
 # Write Kafka event
+```
 cd /opt/bitnami/kafka/bin
+
+# create a topic
 ./kafka-topics.sh --create --topic <topic> --bootstrap-server localhost:9092
+
+# start console producer
 ./kafka-console-producer.sh --bootstrap-server 127.0.0.1:9092 --topic <topic> --producer.config /opt/bitnami/kafka/config/producer.properties
+
+# start console consumer
+./kafka-console-consumer.sh --bootstrap-server 127.0.0.1:9092 --topic transformed --consumer.config /opt/bitnami/kafka/config/consumer.properties
+```
