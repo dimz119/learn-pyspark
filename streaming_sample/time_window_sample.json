@@ -1,0 +1,7 @@
+{"create_date":"2023-09-01 00:04:00","amount": 1000}
+{"create_date":"2023-09-01 00:07:00","amount": 300}
+{"create_date":"2023-09-01 00:11:00","amount": 800}
+{"create_date":"2023-09-01 00:03:00","amount": 1000}
+{"create_date":"2023-09-01 00:40:00","amount": 1000}
+# this will be ignored
+{"create_date":"2023-09-01 00:03:00","amount": 1300}

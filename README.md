@@ -52,9 +52,12 @@ cd /opt/bitnami/kafka/bin
 # create a topic
 ./kafka-topics.sh --create --topic <topic> --bootstrap-server localhost:9092
 
+# delete the topic
+./kafka-topics.sh --bootstrap-server 127.0.0.1:9092  --delete --topic <topic>
+
 # start console producer
 ./kafka-console-producer.sh --bootstrap-server 127.0.0.1:9092 --topic <topic> --producer.config /opt/bitnami/kafka/config/producer.properties
 
 # start console consumer
-./kafka-console-consumer.sh --bootstrap-server 127.0.0.1:9092 --topic transformed --consumer.config /opt/bitnami/kafka/config/consumer.properties
+./kafka-console-consumer.sh --bootstrap-server 127.0.0.1:9092 --topic <topic> --consumer.config /opt/bitnami/kafka/config/consumer.properties
 ```
