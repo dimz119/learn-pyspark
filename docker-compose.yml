@@ -68,6 +68,16 @@ services:
       - "9094:9094"
     networks:
       - backend
+  cassandra:
+    image: bitnami/cassandra:4.0.11
+    volumes:
+      - ./cassandra-persistence:/bitnami
+    environment:
+      - CASSANDRA_TRANSPORT_PORT_NUMBER=7000
+    ports:
+      - "9042:9042"
+    networks:
+      - backend
 networks:
   backend:
     driver: bridge
