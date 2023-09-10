@@ -1,0 +1,6 @@
+# impression
+{"placement_id": "100", "uuid": "xyz-1237", "create_date": "2023-09-01 00:00:00", "campaign": "1002"}
+{"placement_id": "100", "uuid": "xyz-1238", "create_date": "2023-09-01 01:00:00", "campaign": "1002"}
+
+# click
+{"placement_id": "100", "uuid": "xyz-1238", "create_date": "2023-09-01 01:01:00"}
