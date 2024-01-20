@@ -1,13 +1,23 @@
 
 # Start PySpark notebook docker
+최근 https://hub.docker.com/r/jupyter/pyspark-notebook 다커 레지스트리에 따르면, image registry를 `quay.io`로 옮긴다는
+내용이 나와있습니다. 일단 아직까지는 Dockerhub으로 이미지를 다운 받은 거에 아무런 문제가 없으니 크게 신경쓰시지는 않으셔도 됩니다.
+
+다만 혹시나 해서 제가 사용할 수 있는 정확한 버전으로 명령어를 바꾸겠습니다.
+
 ```
 # use docker command
-docker run -it --rm -p 8888:8888 -v /Users/seungjoonlee/git/pyspark:/home/jovyan/work --user root -e NB_GID=100 -e GRANT_SUDO=yes -e GRANT_SUDO=yes jupyter/pyspark-notebook
+# download notebook image(with spark-3.5.0)
+$ docker pull jupyter/pyspark-notebook:spark-3.5.0
+
+# start the docker with spark-3.5.0
+$ docker run -it --rm -p 8888:8888 -v "${PWD}":/home/jovyan/work --user root -e NB_GID=100 -e GRANT_SUDO=yes -e GRANT_SUDO=yes jupyter/pyspark-notebook:spark-3.5.0
 
 or
 
 # use docker compose
-docker compose up
+$ docker compose up
+
 # list the running docker containers
 $ docker ps
 CONTAINER ID   IMAGE                      COMMAND                  CREATED         STATUS                   PORTS                                                                      NAMES
@@ -17,7 +27,7 @@ dadc6458f9fe   bitnami/spark:3.4          "/opt/bitnami/script…"   6 minutes a
 4d441801b11a   bitnami/kafka:3.4          "/opt/bitnami/script…"   6 minutes ago   Up 6 minutes             0.0.0.0:9092->9092/tcp, 0.0.0.0:9094->9094/tcp                             pyspark-kafka-1
 
 # find the pyspark container id(where 0042c7d1e77d should be replaced by yours)
-docker logs 0042c7d1e77d
+$ docker logs 0042c7d1e77d
 ...
 [C 2023-09-04 23:25:30.364 ServerApp]
     To access the server, open this file in a browser:

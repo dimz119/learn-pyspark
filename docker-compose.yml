@@ -39,7 +39,7 @@ services:
     networks:
       - backend
   pyspark:
-    image: jupyter/pyspark-notebook
+    image: jupyter/pyspark-notebook:spark-3.5.0
     user: "root"
     environment:
       - NB_GID=100
