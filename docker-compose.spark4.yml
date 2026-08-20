@@ -1,0 +1,143 @@
+# Spark 4.2.0 스택.
+#
+# 기존 docker-compose.yml 과의 차이:
+#   - master/worker 를 bitnami/spark -> apache/spark 로 교체.
+#     bitnami 는 2025-08 이후 무료 이미지 배포를 중단해서 4.x 태그가 없다.
+#     (구버전은 bitnamilegacy/spark 로 이동)
+#   - apache/spark 이미지는 bitnami 의 SPARK_MODE 환경변수 규약이 없다.
+#     entrypoint 가 K8s 용이라 standalone 데몬은 `class` 로 직접 띄운다.
+#   - SPARK_HOME 이 /opt/bitnami/spark 가 아니라 /opt/spark 다.
+#   - jupyter/pyspark-notebook 은 deprecated -> quay.io/jupyter/pyspark-notebook
+#
+# 실행: docker compose -f docker-compose.spark4.yml up -d
+services:
+  spark:
+    image: apache/spark:4.2.0
+    command: >
+      /opt/spark/bin/spark-class
+      org.apache.spark.deploy.master.Master
+      --host spark --port 7077 --webui-port 8080
+    volumes:
+      - .:/opt/spark/work
+      - ./spark_conf/log4j2.properties:/opt/spark/conf/log4j2.properties
+      - ./spark_conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
+      - ./spark-events:/tmp/spark-events
+    environment:
+      - SPARK_NO_DAEMONIZE=true
+    user: "root"
+    ports:
+      - '8080:8080'
+      - '7077:7077'
+      - '4040:4040'
+    networks:
+      - backend
+
+  spark-worker:
+    image: apache/spark:4.2.0
+    command: >
+      /opt/spark/bin/spark-class
+      org.apache.spark.deploy.worker.Worker
+      spark://spark:7077 --webui-port 8081
+    volumes:
+      - .:/opt/spark/work
+      - ./spark_conf/log4j2.properties:/opt/spark/conf/log4j2.properties
+      - ./spark_conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
+      - ./spark-events:/tmp/spark-events
+    environment:
+      - SPARK_NO_DAEMONIZE=true
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=1
+    user: "root"
+    depends_on:
+      - spark
+    ports:
+      - '8081:8081'
+    networks:
+      - backend
+
+  # History Server: 기존 compose 에서는 master 컨테이너가 18080 을 열어두기만 했지
+  # 실제로 데몬을 띄우지는 않았다. 여기서는 별도 서비스로 분리했다.
+  spark-history:
+    image: apache/spark:4.2.0
+    command: >
+      /opt/spark/bin/spark-class
+      org.apache.spark.deploy.history.HistoryServer
+    volumes:
+      - ./spark_conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
+      - ./spark-events:/tmp/spark-events
+    environment:
+      - SPARK_NO_DAEMONIZE=true
+    user: "root"
+    depends_on:
+      - spark
+    ports:
+      - '18080:18080'
+    networks:
+      - backend
+
+  pyspark:
+    image: quay.io/jupyter/pyspark-notebook:spark-4.2.0
+    user: "root"
+    environment:
+      - NB_GID=100
+      - GRANT_SUDO=yes
+      # spark-4.2.0 태그는 pyspark 를 conda site-packages 에 설치하지 않고
+      # $SPARK_HOME/python 에만 두면서 PYTHONPATH 를 안 잡아준다.
+      # 이게 없으면 노트북에서 `import pyspark` 가 ModuleNotFoundError 로 죽는다.
+      - PYTHONPATH=/usr/local/spark/python:/usr/local/spark/python/lib/py4j-0.10.9.9-src.zip
+    volumes:
+      - .:/home/jovyan/work
+    ports:
+      - "8888:8888"
+    networks:
+      - backend
+
+  # bitnami/kafka 도 2025-08 이후 무료 배포 중단(태그 0건) -> apache/kafka 로 교체.
+  # 환경변수 접두사가 KAFKA_CFG_* 가 아니라 KAFKA_* 이다.
+  kafka:
+    image: apache/kafka:4.2.1
+    volumes:
+      - ./kafka-persistence:/var/lib/kafka/data
+    environment:
+      - KAFKA_NODE_ID=0
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_PROCESS_ROLES=controller,broker
+      - KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_LOG_DIRS=/var/lib/kafka/data
+      # 단일 브로커라 내부 토픽 복제 계수를 1 로 낮춰야 한다(기본값 3).
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
+    ports:
+      - "9092:9092"
+      - "9094:9094"
+    networks:
+      - backend
+
+  # bitnami/cassandra 도 마찬가지 -> Docker Official 이미지로 교체.
+  # 데이터 경로가 /bitnami 가 아니라 /var/lib/cassandra 다.
+  cassandra:
+    image: cassandra:5.0
+    volumes:
+      - ./cassandra-persistence:/var/lib/cassandra
+    environment:
+      - CASSANDRA_STORAGE_PORT=7000
+      - CASSANDRA_CLUSTER_NAME=learn-pyspark
+      - CASSANDRA_DC=datacenter1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - MAX_HEAP_SIZE=1G
+      - HEAP_NEWSIZE=200M
+    ports:
+      - "9042:9042"
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge

@@ -1,7 +1,6 @@
-version: '3.9'
 services:
   spark:
-    image: docker.io/bitnami/spark:3.4
+    image: docker.io/bitnamilegacy/spark:3.4
     volumes:
       - .:/opt/bitnami/spark/work
       - ./spark_conf/log4j2.properties:/opt/bitnami/spark/conf/log4j2.properties
@@ -22,7 +21,7 @@ services:
     networks:
       - backend
   spark-worker:
-    image: docker.io/bitnami/spark:3.4
+    image: docker.io/bitnamilegacy/spark:3.4
     volumes:
       - .:/opt/bitnami/spark/work
     environment:
@@ -44,6 +43,9 @@ services:
     environment:
       - NB_GID=100
       - GRANT_SUDO=yes
+      # 이 이미지는 pyspark 를 $SPARK_HOME/python 에만 두고 PYTHONPATH 를 안 잡아준다.
+      # 없으면 노트북에서 `import pyspark` 가 ModuleNotFoundError 로 죽는다.
+      - PYTHONPATH=/usr/local/spark/python:/usr/local/spark/python/lib/py4j-0.10.9.7-src.zip
     volumes:
       - .:/home/jovyan/work
     ports:
@@ -51,7 +53,7 @@ services:
     networks:
       - backend
   kafka:
-    image: bitnami/kafka:3.4
+    image: bitnamilegacy/kafka:3.4
     volumes:
       - ./kafka-persistence:/bitnami/kafka
     environment:
@@ -69,7 +71,7 @@ services:
     networks:
       - backend
   cassandra:
-    image: bitnami/cassandra:4.0.11
+    image: bitnamilegacy/cassandra:4.0.11
     volumes:
       - ./cassandra-persistence:/bitnami
     environment:
